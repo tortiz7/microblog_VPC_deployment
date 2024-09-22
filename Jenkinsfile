@@ -3,7 +3,10 @@ pipeline {
     stages {
         stage ('Build') {
             steps {
-                sh '''#!/bin/bash               
+                sh '''#!/bin/bash
+		 sudo add-apt-repository ppa:deadsnakes/ppa -y
+		 sudo apt update -y
+		 sudo apt install -y python3.9 python3.9-venv python3-pip              
 	         python3.9 -m venv venv
                  source venv/bin/activate
                  pip install -r requirements.txt
