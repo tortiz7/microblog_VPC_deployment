@@ -19,7 +19,7 @@ pipeline {
                 sh '''#!/bin/bash
                 source venv/bin/activate
 		export PYTHONPATH=.
-                py.test ./tests/unit/ --verbose --junit-xml test-reports/results.xml
+                pytest ./tests/unit/ --verbose --junit-xml test-reports/results.xml
                 '''
             }
             post {
