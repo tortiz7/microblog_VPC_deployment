@@ -18,7 +18,6 @@ pipeline {
             steps {
                 sh '''#!/bin/bash
                 source venv/bin/activate
-		pip install pytest
 		export PYTHONPATH=.
                 py.test ./tests/unit/ --verbose --junit-xml test-reports/results.xml
                 '''
