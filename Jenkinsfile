@@ -51,7 +51,7 @@ pipeline {
       stage ('Deploy') {
             steps {
                 sh '''#!/bin/bash
-		ssh -i ~/.ssh/web_server_key.pem ubuntu@10.0.1.27 'source setup.sh'
+		ssh -i /home/ubuntu/.ssh/web_server_key.pem ubuntu@10.0.1.27 'source setup.sh'
                 '''
             }
         }
