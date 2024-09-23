@@ -51,7 +51,7 @@ pipeline {
       stage ('Deploy') {
             steps {
                 sh '''#!/bin/bash
-		ssh -i /var/lib/jenkins/.ssh/new_web_server_key.sh ubuntu@10.0.1.27 'source setup.sh'
+		ssh -i /var/lib/jenkins/.ssh/new_web_server_key.pem ubuntu@10.0.1.27 'source setup.sh'
                 '''
             }
         }
