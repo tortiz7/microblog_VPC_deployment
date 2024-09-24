@@ -130,7 +130,7 @@ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 
 As noted in the Jenkins installation step, Nginx is installed on the `Web_server` EC2, and thus we must specifically configure the location block to route incoming HTTPS requests from NGINX Port 80 on the `Web_Server` to the Gunicorn Port 5000 on the `Application_Server`. The Location block below will show you how. 
 
-- **How:** Since we are already SSH'd into the `Web_Server` EC2 from the `Jenkins` EC2, we can nano into the NGINX Configuration file at this location: `/etc/nginx/sites-enabled/default` and add the following to the Location block. Note that unline the previous workload, the url for the proxy_pass **must use the Private IP of your Application Server** in order to route the necessary traffic to Gunicorn:
+- **How:** Since we are already SSH'd into the `Web_Server` EC2 from the `Jenkins` EC2, we can nano into the NGINX Configuration file at this location: `/etc/nginx/sites-enabled/default` and add the following to the Location block. Note that unlike the previous workload, the url for the proxy_pass **must use the Private IP of your Application Server** in order to route the necessary traffic to Gunicorn:
   
 ```bash
   location / {
