@@ -92,7 +92,7 @@ These four EC2s are named after their role within our infrastructure ecosystem. 
 ### Install Jenkins
 - **Why**: Jenkins automates the build and deployment pipeline. It pulls code from GitHub, tests it, and handles deployment once the Jenkinsfile is configured to do so. The big difference with this Jenkins deployment compared to our previous Workloads is that Jenkins will be hosted on its own EC2, separate from the app source code. We will still need to install Python 3.9 and it's dependencies on this Jenkins EC2, however, because Jenkins will need those dependencies in order to build and test the app code's logic.  
   
-- **How**: I created and ran the below script to install Jenkins, and it's language prerequisite Java (using Java 17 for this deployment). To save time, the script first updates and upgrades all packages included in the EC2, ensuring they are up-to-date and secure. The script also installs Python3.9 - the langauge our flask app relies on - and all the dependencies necessary for our application (Python3.9 venv and Python3.9-pip) - just as it did in the previous Workload; only difference is there will be no Nginx install in this script, since Nginx will be installed on the Web_Server EC2. SSH into the Jenkins EC2, create a file for the Jenkins install script, and then copy and paste the below into it:
+- **How**: I created and ran the below script to install Jenkins, and it's language prerequisite Java (using Java 17 for this deployment). To save time, the script first updates and upgrades all packages included in the EC2, ensuring they are up-to-date and secure. The script also installs Python3.9 - the langauge our flask app relies on - and all the dependencies necessary for our application (Python3.9 venv and Python3.9-pip) - just as it did in the previous Workload; only difference is there will be no Nginx install in this script, since Nginx will be installed on the `Web_Server` EC2. SSH into the Jenkins EC2, create a file for the Jenkins install script, and then copy and paste the below into it:
 
 ``` bash
 #!/bin/bash
@@ -123,21 +123,27 @@ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 
 - **How:** In order to SSH from the `Jenkins` server into the `Web_Server`, we will need to first create a new key pair. Run the `ssh-keygen ~/.ssh` command from the commandline in the `Jenkins` server to create a new keypair in your .ssh directory, name your key pair something that will remind you it is for accessing the `Web_Server`, and then save the downloaded .pem key somewhere safe. Nano into the .pub key that was just create, and copy all the contents within. Then, go back to your running EC2 instances and connect to the `Web_Server`. Once connected, run `cd .ssh` to get to the `.ssh` directory, than run `nano authorized_keys` and paste the contents of the .pub key into this file in a new line.
 
-Go back to the tab with your `Jenkins` EC2 instance terminal, and run the following command: `ssh -i <your_.pem_key_filename> ubuntu@<your_Web_Server's_Public_IP>`. Type yes when asked if you trust the host's identity to connect to the `Web_Server` EC2 and save it's unique "fingerprint" in the `known_hosts` folder in the `Jenkins` EC2s .ssh folder. Every subsequent SSH attempt to the `Web_Server` EC2 will check this fingerprint saved in the known_hosts folder and compare it with the fingerprint of the `Web_Server` so we know we're connecting to the correct server. This is an added security step that helps prevent "man-in-the-middle" attacks, wherein a bad actor attempts to impersonate a server in order to get your credentials. 
+	Go back to the tab with your `Jenkins` EC2 instance terminal, and run the following command: `ssh -i <your_.pem_key_filename> ubuntu@<your_Web_Server's_Public_IP>`. Type yes when asked if you trust the host's identity to connect to the `Web_Server` EC2 and save it's unique "fingerprint" in the `known_hosts` folder in the `Jenkins` EC2s .ssh folder. Every subsequent SSH attempt to the `Web_Server` EC2 will check this fingerprint saved in the known_hosts folder and compare it with the fingerprint of the `Web_Server` so we know we're connecting to the correct server. This is an added security step that helps prevent "man-in-the-middle" attacks, wherein a bad actor attempts to impersonate a server in order to get your credentials. 
 
 ### Configure the NGINX Location block
 - **Why:** NGINX is a reverse proxy server between the client browser and our Microblog application. It is a gatekeeper, managing incoming traffic to assist with load balancing in the case of scalability, strengthening security by validating SSL/TLS certificates for incoming HTTPS requests, and increasing performance by caching certain static content (images, JavaScript files) and forwarding all dynamic content to Gunicorn (on Port 5000, only exposed locally, and not to the internet).
 
-- **How:** We nano into the NGINX Configuration file at this location: `/etc/nginx/sites-enabled/default` and add this to the Location block:
+As noted in the Jenkins installation step, Nginx is installed on the `Web_server` EC2, and thus we must specifically configure the location block to route incoming HTTPS requests from NGINX Port 80 on the `Web_Server` to the Gunicorn Port 5000 on the `Application_Server`. The Location block below will show you how. 
+
+- **How:** Since we are already SSH'd into the `Web_Server` EC2 from the `Jenkins` EC2, we can nano into the NGINX Configuration file at this location: `/etc/nginx/sites-enabled/default` and add the following to the Location block. Note that unline the previous workload, the url for the proxy_pass **must use the Private IP of your Application Server** in order to route the necessary traffic to Gunicorn:
   
 ```bash
   location / {
-proxy_pass http://127.0.0.1:5000;
+proxy_pass http://<your_App_Server_Private_IP>:5000;
 proxy_set_header Host $host;
 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 }  
 ```
 
+---
+### SSH Into the Application_Server
+
+- **Why:** Now, we will connect to the `Application_Server` for the first time. 
 ---
 ### Configure and Run the Microblog App on the EC2
 - **Why:** Before we can automate the deployment of the Microblog application via Jenkins, we want to ensure we have every component we need to run it. To do so, we will clone the source code repository from GitHub to our EC2's, and then create a venv in that directory, install all dependencies, set the environment variable, compile and migrate the databases, and then run Gunicorn to serve the app.
@@ -190,15 +196,9 @@ Restart=always
 
 [Install]
 WantedBy=multi-user.target
-
-
-
-
-
 ```
 
 ---
-### Create `test_app.py` Script for Pytest
 ### Create `test_app.py` Script for Pytest
 
 - **Why:** We created the `test_app.py` script for Pytest to automate testing of key functionality in the Microblog app, specifically ensuring that critical components such as the homepage and login functionality work as expected. This is vital for continuous integration (CI) pipelines, as automated tests help identify issues early in the build process, preventing bugs from reaching production and improving the overall quality of the application.
