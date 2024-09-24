@@ -42,51 +42,50 @@ This project emphasizes hands-on experience with tools such as Jenkins for autom
 
 The Access and Secret Access keys are needed for future steps, so safe storage of them is vital to a successful automated CI/CD pipeline. **Never** share your access keys, as a bad actor can get a hold of them and use the keys to access your server, wreaking havoc, compromising data integrity and potentially stealing sensitive information.
 
-  - **Create the four EC2's and their Security Groups:**
+**Create the four EC2's and their Security Groups:**
 
-    	- **The Jenkins EC2**
-    	1. Navigate to the EC2 services page in AWS and click "Launch Instance"
-        2. Name the EC2 "Jenkins" and select "Ubuntu" as the OS Image.
-        3. Select a t3.medium as the instance type 
-        4. Select the key pair you just created as your method of SSH'ing into the EC2. 
-        5. In "Network Settings", keep the default VPC selected for this EC2, with Auto-Assign Public IP enabled
-    	6. Create a Security Group that allow inbound traffic to the services and applications the EC2 will need and name it after the EC2 it will control
-        7. The Inbound rules should allow network traffic on Ports 22 (SSH) and 8080 (Jenkins) and all Outbound traffic
-    	8. Launch the instance!
-    
- 	- **The Web Server EC2**
-    	1. Go back to the EC2 services page in AWS and click "Launch Instance" to create our second EC2
-        2. Name the EC2 "Web_Server" and select "Ubuntu" as the OS Image.
-        3. Select a t3.micro as the instance type 
-        4. Select the key pair you just created as your method of SSH'ing into the EC2. 
-        5. In "Network Settings", select the VPC we configured in Step 1 for this EC2.
-        6. For the Subnet field, select the Public Subnet you created. Auto Assign Public IP will be disabled, because we already enabled auto-assigning for the Public Subnet.
-    	7. Create a Security Group that allow inbound traffic to the services and applications the EC2 will need and name it after the EC2 it will control
-        8. The Inbound rules should allow network traffic on Ports 22 (SSH) and 80 (NGINX) and all Outbound traffic
-        9. Launch the instance!
+**The Jenkins EC2**
+1. Navigate to the EC2 services page in AWS and click "Launch Instance".
+2. Name the EC2 "Jenkins" and select "Ubuntu" as the OS Image.
+3. Select a t3.medium as the instance type.
+4. Select the key pair you just created as your method of SSH'ing into the EC2.
+5. In "Network Settings", keep the default VPC selected for this EC2, with Auto-Assign Public IP enabled.
+6. Create a Security Group that allows inbound traffic to the services and applications the EC2 will need and name it after the EC2 it will control.
+7. The Inbound rules should allow network traffic on Ports 22 (SSH) and 8080 (Jenkins), and all Outbound traffic.
+8. Launch the instance!
 
-        - **The Application Server EC2**
-        1. Go back to the EC2 services page in AWS and click "Launch Instance" to create our third EC2
-        2. Name the EC2 "Application_Server" and select "Ubuntu" as the OS Image.
-        3. Select a t3.micro as the instance type 
-        4. We will create a new Key Pair for this instance. Ensure you save the .pem file that is downloaded upon creation in a safe place, as we will need it later!. 
-        5. In "Network Settings", select the VPC we configured in Step 1 for this EC2.
-        6. For the Subnet field, select the Private Subnet you created. This EC2 will not need a Public IP, so do not enable the auto assigning of one. 
-    	7. Create a Security Group that allow inbound traffic to the services and applications the EC2 will need and name it after the EC2 it will control
-        8. The Inbound rules should allow network traffic on Ports 22 (SSH), 80 (Gunicorn) and 9100 (Node Exporter), and allow all Outbound traffic
-        9. Launch the instance!
-            
-   	- **The Monitoring EC2**
-      	1. Go back to the EC2 services page in AWS and click "Launch Instance" to create our final EC2
-        2. Name the EC2 "Monitoring" and select "Ubuntu" as the OS Image.
-        3. Select a t3.micro as the instance type 
-        4. Select the inital Key Pair you created at the beginning of this step for SSH'ing into this EC2. 
-        5. In "Network Settings", select the default VPC that the Jenkins EC2 also resides in. Leave "Auto-assign Public IP" enabled. 
-    	6. Create a Security Group that allow inbound traffic to the services and applications the EC2 will need and name it after the EC2 it will control
-        7. The Inbound rules should allow network traffic on Ports 22 (SSH), 9000 (Prometheus), 3000 (Grafana) and 9100 (Node Exporter), and allow all Outbound traffic
-        8. Launch the instance!
+**The Web Server EC2**
+1. Go back to the EC2 services page in AWS and click "Launch Instance" to create our second EC2.
+2. Name the EC2 "Web_Server" and select "Ubuntu" as the OS Image.
+3. Select a t3.micro as the instance type.
+4. Select the key pair you just created as your method of SSH'ing into the EC2.
+5. In "Network Settings", select the VPC we configured in Step 1 for this EC2.
+6. For the Subnet field, select the Public Subnet you created. Auto-Assign Public IP will be disabled, because we already enabled auto-assigning for the Public Subnet.
+7. Create a Security Group that allows inbound traffic to the services and applications the EC2 will need and name it after the EC2 it will control.
+8. The Inbound rules should allow network traffic on Ports 22 (SSH) and 80 (NGINX), and all Outbound traffic.
+9. Launch the instance!
+
+**The Application Server EC2**
+1. Go back to the EC2 services page in AWS and click "Launch Instance" to create our third EC2.
+2. Name the EC2 "Application_Server" and select "Ubuntu" as the OS Image.
+3. Select a t3.micro as the instance type.
+4. We will create a new Key Pair for this instance. Ensure you save the `.pem` file that is downloaded upon creation in a safe place, as we will need it later!
+5. In "Network Settings", select the VPC we configured in Step 1 for this EC2.
+6. For the Subnet field, select the Private Subnet you created. This EC2 will not need a Public IP, so do not enable the auto-assigning of one.
+7. Create a Security Group that allows inbound traffic to the services and applications the EC2 will need and name it after the EC2 it will control.
+8. The Inbound rules should allow network traffic on Ports 22 (SSH), 80 (Gunicorn), and 9100 (Node Exporter), and allow all Outbound traffic.
+9. Launch the instance!
+
+**The Monitoring EC2**
+1. Go back to the EC2 services page in AWS and click "Launch Instance" to create our final EC2.
+2. Name the EC2 "Monitoring" and select "Ubuntu" as the OS Image.
+3. Select a t3.micro as the instance type.
+4. Select the initial Key Pair you created at the beginning of this step for SSH'ing into this EC2.
+5. In "Network Settings", select the default VPC that the Jenkins EC2 also resides in. Leave "Auto-Assign Public IP" enabled.
+6. Create a Security Group that allows inbound traffic to the services and applications the EC2 will need and name it after the EC2 it will control.
+7. The Inbound rules should allow network traffic on Ports 22 (SSH), 9000 (Prometheus), 3000 (Grafana), and 9100 (Node Exporter), and allow all Outbound traffic.
+8. Launch the instance!
            
-    
 These four EC2s are named after their role within our infrastructure ecosystem. The **Jenkins** EC2 will house our Jenkins workspace where the build and testing will occur; The **Application Server** will host all our Applicatio Source code, and will be where our application is deployed from via a script; the **Web Server** will act as a bridge between our Jenkins and Application Server EC2s and will host the NGINX service that will proxy pass network traffic to our Application Server, which is inaccessible from the internet by itself; and our final EC2, **Monitoring**, will host the Prometheus and Grafana services, which will allow us to scrape vital metrics from the Application Server and visualize them in a helpful dashboard in Grafana, empowering us to take action when resources are taxed and perform pivotal maintenance on the Application Server when needed.
 
 ---
