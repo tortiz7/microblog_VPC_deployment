@@ -44,7 +44,6 @@ The Access and Secret Access keys are needed for future steps, so safe storage o
 
   - **Create the four EC2's and their Security Groups:**
 
-    --
     	- **The Jenkins EC2**
     	1. Navigate to the EC2 services page in AWS and click "Launch Instance"
         2. Name the EC2 "Jenkins" and select "Ubuntu" as the OS Image.
@@ -55,7 +54,6 @@ The Access and Secret Access keys are needed for future steps, so safe storage o
         7. The Inbound rules should allow network traffic on Ports 22 (SSH) and 8080 (Jenkins) and all Outbound traffic
     	8. Launch the instance!
     
---
  	- **The Web Server EC2**
     	1. Go back to the EC2 services page in AWS and click "Launch Instance" to create our second EC2
         2. Name the EC2 "Web_Server" and select "Ubuntu" as the OS Image.
@@ -67,7 +65,6 @@ The Access and Secret Access keys are needed for future steps, so safe storage o
         8. The Inbound rules should allow network traffic on Ports 22 (SSH) and 80 (NGINX) and all Outbound traffic
         9. Launch the instance!
 
-   --
         - **The Application Server EC2**
         1. Go back to the EC2 services page in AWS and click "Launch Instance" to create our third EC2
         2. Name the EC2 "Application_Server" and select "Ubuntu" as the OS Image.
@@ -79,7 +76,6 @@ The Access and Secret Access keys are needed for future steps, so safe storage o
         8. The Inbound rules should allow network traffic on Ports 22 (SSH), 80 (Gunicorn) and 9100 (Node Exporter), and allow all Outbound traffic
         9. Launch the instance!
             
---
    	- **The Monitoring EC2**
       	1. Go back to the EC2 services page in AWS and click "Launch Instance" to create our final EC2
         2. Name the EC2 "Monitoring" and select "Ubuntu" as the OS Image.
