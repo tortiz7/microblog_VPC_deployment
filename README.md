@@ -46,7 +46,7 @@ The Access and Secret Access keys are needed for future steps, so safe storage o
 
 **The Jenkins EC2**
 1. Navigate to the EC2 services page in AWS and click "Launch Instance".
-2. Name the EC2 "Jenkins" and select "Ubuntu" as the OS Image.
+2. Name the EC2 `Jenkins` and select "Ubuntu" as the OS Image.
 3. Select a t3.medium as the instance type.
 4. Select the key pair you just created as your method of SSH'ing into the EC2.
 5. In "Network Settings", keep the default VPC selected for this EC2, with Auto-Assign Public IP enabled.
@@ -56,7 +56,7 @@ The Access and Secret Access keys are needed for future steps, so safe storage o
 
 **The Web Server EC2**
 1. Go back to the EC2 services page in AWS and click "Launch Instance" to create our second EC2.
-2. Name the EC2 "Web_Server" and select "Ubuntu" as the OS Image.
+2. Name the EC2 `Web_Server` and select "Ubuntu" as the OS Image.
 3. Select a t3.micro as the instance type.
 4. Select the key pair you just created as your method of SSH'ing into the EC2.
 5. In "Network Settings", select the VPC we configured in Step 1 for this EC2.
@@ -67,7 +67,7 @@ The Access and Secret Access keys are needed for future steps, so safe storage o
 
 **The Application Server EC2**
 1. Go back to the EC2 services page in AWS and click "Launch Instance" to create our third EC2.
-2. Name the EC2 "Application_Server" and select "Ubuntu" as the OS Image.
+2. Name the EC2 `Application_Server` and select "Ubuntu" as the OS Image.
 3. Select a t3.micro as the instance type.
 4. We will create a new Key Pair for this instance. Ensure you save the `.pem` file that is downloaded upon creation in a safe place, as we will need it later!
 5. In "Network Settings", select the VPC we configured in Step 1 for this EC2.
@@ -90,15 +90,15 @@ These four EC2s are named after their role within our infrastructure ecosystem. 
 
 ---
 ### Install Jenkins
-- **Why**: Jenkins automates the build and deployment pipeline. It pulls code from GitHub, tests it, and handles deployment once the Jenkinsfile is configured to do so. We've previously used Jenkins for CI/CD implementation for previous workloads - I've built upon foundation, this time adding pytest for the testing phase and OWASP scanning to ensure our dependencies are ready for deployment. 
+- **Why**: Jenkins automates the build and deployment pipeline. It pulls code from GitHub, tests it, and handles deployment once the Jenkinsfile is configured to do so. The big difference with this Jenkins deployment compared to our previous Workloads is that Jenkins will be hosted on its own EC2, separate from the app source code. We will still need to install Python 3.9 and it's dependencies on this Jenkins EC2, however, because Jenkins will need those dependencies in order to build and test the app code's logic.  
   
-- **How**: I created and ran the below script to install Jenkins, and it's language prerequisite Java (using Java 11 for this deployment). To save time, the script first updates and upgrades all packages included in the EC2, ensuring they are up-to-date and secure. The script also installs Python3.9 - the langauge our flask app relies on - and all the dependencies necessary for our application (Python3.9 venv and Python3.9-pip), as well as Nginix, a reverse-proxy server.
+- **How**: I created and ran the below script to install Jenkins, and it's language prerequisite Java (using Java 17 for this deployment). To save time, the script first updates and upgrades all packages included in the EC2, ensuring they are up-to-date and secure. The script also installs Python3.9 - the langauge our flask app relies on - and all the dependencies necessary for our application (Python3.9 venv and Python3.9-pip) - just as it did in the previous Workload; only difference is there will be no Nginx install in this script, since Nginx will be installed on the Web_Server EC2. SSH into the Jenkins EC2, create a file for the Jenkins install script, and then copy and paste the below into it:
 
 ``` bash
 #!/bin/bash
 sudo apt update -y
 sudo apt upgrade -y
-sudo apt install -y openjdk-11-jdk
+sudo apt install -y openjdk-17-jdk
 wget -q -O - https://pkg.jenkins.io/debian/jenkins.io.key | sudo apt-key add -
 sudo sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 5BA31D57EF5975CA
@@ -109,14 +109,22 @@ sudo systemctl enable jenkins
 sudo add-apt-repository ppa:deadsnakes/ppa -y
 sudo apt update -y
 sudo apt install -y python3.9 python3.9-venv python3-pip
-sudo apt install -y nginx
-sudo systemctl start nginx
-sudo systemctl enable nginx
 echo "Jenkins initial password:"
-sudo cat /var/lib/jenkins/secrets/initialAdminPassword!
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 ```
 
+`chmod +x` the script to make it executable, and then run it to install everything within.
+
 ---
+
+### Testing SSH from the `Jenkins` EC2 into the `Web_Server` EC2
+
+- **Why:** This workload will require us to SSH from one EC2 into another one, in order to make the deployment of our Microblog Flask Application truly automated. This will serve as our first test of SSH'ing from one server to the other.
+
+- **How:** In order to SSH from the `Jenkins` server into the `Web_Server`, we will need to first create a new key pair. Run the `ssh-keygen ~/.ssh` command from the commandline in the `Jenkins` server to create a new keypair in your .ssh directory, name your key pair something that will remind you it is for accessing the `Web_Server`, and then save the downloaded .pem key somewhere safe. Nano into the .pub key that was just create, and copy all the contents within. Then, go back to your running EC2 instances and connect to the `Web_Server`. Once connected, run `cd .ssh` to get to the `.ssh` directory, than run `nano authorized_keys` and paste the contents of the .pub key into this file in a new line.
+
+Go back to the tab with your `Jenkins` EC2 instance terminal, and run the following command: `ssh -i <your_.pem_key_filename> ubuntu@<your_Web_Server's_Public_IP>`. Type yes when asked if you trust the host's identity to connect to the `Web_Server` EC2 and save it's unique "fingerprint" in the `known_hosts` folder in the `Jenkins` EC2s .ssh folder. Every subsequent SSH attempt to the `Web_Server` EC2 will check this fingerprint saved in the known_hosts folder and compare it with the fingerprint of the `Web_Server` so we know we're connecting to the correct server. This is an added security step that helps prevent "man-in-the-middle" attacks, wherein a bad actor attempts to impersonate a server in order to get your credentials. 
+
 ### Configure the NGINX Location block
 - **Why:** NGINX is a reverse proxy server between the client browser and our Microblog application. It is a gatekeeper, managing incoming traffic to assist with load balancing in the case of scalability, strengthening security by validating SSL/TLS certificates for incoming HTTPS requests, and increasing performance by caching certain static content (images, JavaScript files) and forwarding all dynamic content to Gunicorn (on Port 5000, only exposed locally, and not to the internet).
 
