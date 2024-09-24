@@ -43,7 +43,6 @@ This project emphasizes hands-on experience with tools such as Jenkins for autom
 The Access and Secret Access keys are needed for future steps, so safe storage of them is vital to a successful automated CI/CD pipeline. **Never** share your access keys, as a bad actor can get a hold of them and use the keys to access your server, wreaking havoc, compromising data integrity and potentially stealing sensitive information.
 
   - **Create the four EC2's and their Security Groups:**
-    
     	- **The Jenkins EC2**
     	1. Navigate to the EC2 services page in AWS and click "Launch Instance"
         2. Name the EC2 "Jenkins" and select "Ubuntu" as the OS Image.
