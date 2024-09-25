@@ -223,7 +223,7 @@ This powerful script has everything you need to launch the Microblog application
 ssh -i ~/.ssh/app_server_key.pem ubuntu@<your_App_Server_Private_IP> 'source start_app.sh'
 ```
 
-Two things of note with this script: the use of source to run the script, rather than ./ like we normally would, and the wrapping of the command in single quotations. First, the latter - we wrap the command in single quotations to ensure that it is treated as a single command by the shell environment that it is executed in (in this case, the `Application_Server`). If we don't wrap the command in the single quotes, than the shell that we are running the `setup.sh` script in (the `Web_Server`) will attempt to run the command, even after SSH'ing into the `Application_Server` - you will receive a "No File" error upon returning to the `Web_Server`. We use `source start_app.sh` to ensure that the changes made to the `Application_Server` by the script persist after the script is finished. This is important because the script sets an environment variable (`FLASK_APP=microblog.py`) that we need to persist in order for the Microblog app to function correctly. 
+Two things of note with this one-line script: the use of source to run the script, rather than ./ like we normally would, and the wrapping of the command in single quotations. First, the latter - we wrap the command in single quotations to ensure that it is treated as a single command by the shell environment that it is executed in (in this case, the `Application_Server`). If we don't wrap the command in the single quotes, than the shell that we are running the `setup.sh` script in (the `Web_Server`) will attempt to run the command, even after SSH'ing into the `Application_Server` - you will receive a "No File" error upon returning to the `Web_Server`. We use `source start_app.sh` to ensure that the changes made to the `Application_Server` by the script persist after the script is finished. This is important because the script sets an environment variable (`FLASK_APP=microblog.py`) that we need to persist in order for the Microblog app to function correctly. 
 
 ---
 ### Time for VPC Peering!
@@ -255,7 +255,7 @@ Viola! You can now SSH from your `Jenkins` EC2 into your `Web` EC2 using the Web
 
 - **Why:** Yes! Another `ssh keygen`! Only this time, as the Jenkins user! Why? Because when we commence the Jenkins Pipeline via the Jenkins UI, Jenkins performs all the steps mandated by the Jenkinsfile on the `Jenkins` EC2 as the Jenkins user. Our previous Workload had to make allowances for the Jenkins user - in order to run a vital Sudo command during the 'Deploy Stage` of the Jenkinsfile, we had to add the Jenkins user to the `Sudoers` group. The same rule applies here - we have to ensure Jenkins has the proper permissions to deploy the application
 
-- **How:** If you haven't figured out the dillema here yet - the Jenkins user **is not authorized** to use the `.pem` we created during the inital `ssh keygen` command that was executed to allow us to SSH from `Jenkins` into `Web_Server`. It's not as simple as giving the Jenkins user permissions to use the current `.pem` file we have, as the Key must also be in a particular directory in order for the Jenkins user to access it while running the Jenkinsfile. Therefore, it is simplier to do the following:
+- **How:** If you haven't figured out the dillema here yet - the Jenkins user **is not authorized** to use the `.pem` we created during the inital `ssh keygen` command that was executed to allow us to SSH from `Jenkins` into `Web_Server`. It's not as simple as giving the Jenkins user permissions to use the current `.pem` file we have, as the Key must also be in a particular directory in order for the Jenkins user to access it while running the Jenkinsfile (you'll see where when you inspect my Jenkinsfile). Therefore, it is simplier to do the following:
 
 1. Ensure you are connected to the `Jenkins` EC2
 2. run the following to become the Jenkins User: `sudo -u jenkins -i`
@@ -272,16 +272,18 @@ If it worked, then you are ready to configure the Jenkins Pipeline!
 ### Configure Jenkins Pipeline
 - **Why**: The Jenkins pipeline builds the application, tests it's logic to ensure no errors, and deploys the Microblog application to the web for us. Just like the previous workload, a `Clean Stage` is implemented to clean stale Gunicorn proccesses, and the `OWASP Dependency Check` scans our third-party libraries and dependencies (such as our Python packages) against the National Vulnerability Database, generating a report that informs us what packages might be at risk and allowing us update or replace them before an issue can arise. The biggest difference between this Jenkinsfile and the one for the previous workload is the `Deploy Stage` - unlike that one, Jenkins is not deploying the application itself; it will SSH into the `Web_Server` EC2 and run the `setup.sh` script that's in the home directory there, which will cause the `Web_Server` to SSH into the `Application_Server` EC2 and run the `start_app.sh` script, which will actually deploy the Microblog Flask Application. This, my friend, is automation!
   
-- **How**: The Jenkinsfile should be configured as such:
+- **How**: Note that you will need to log into Jenkins (<Public_IP_of_Jenkins_Server:8080> in address bar) and add the OWASP Plugin by navigating to "Manage Jenkins < Available Plugins < Search 'OWASP' < Select 'OWASP Dependency Check'". This time around, we downloaded an API Key from the NVD website (https://nvd.nist.gov/developers/request-an-api-key), added that into our Jenkins Credentials Manager, and then referenced it in our `OWASP Scan` stage to speed up the OWASP scan. The Jenkinsfile should be configured as such:
 
 **Build Stage**: Creates virtual environment, installs dependencies, runs migrations, and compiles translations.
-**Test Stage**: Configures Pytest to run [the same pytest as WL3](test/unit/test_app.py) 
+**Test Stage**: Configures Pytest to run [the same pytest as WL3](tests/unit/test_app.py) 
 **Clean Stage**: Stops running Gunicorn instances before each new deploy.
 **OWASP Dependency Check**: Adds the OWASP plugin to check for known vulnerabilities.
 **Deploy Stage**: Deploys the app starting the chain of scripts that automates the deployment, outlined above
 
 [You can view the Jenkinsfile here to see the Deployment command and other aspects of the pipeline](/Jenkinsfile)
 Note the use of source and quotation wraparounds in the `Deploy` command, for the same reasons we used them when SSH'ing into the `Application Server` and running the `start_app.sh` script. This time, it's not an environment variable we need to persist, but rather the SSH session!
+
+Now the moment of truth: input your 'Web_Server' Public IP into your browser's address bar and hit Enter. Is the Microblog Application running? If so, then good job! You've automated the deployment of this application. But the jobs not done yet...
 
 ---
 ### Install Prometheus and Grafana on the Monitoring EC2
