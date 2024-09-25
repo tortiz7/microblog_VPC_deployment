@@ -433,7 +433,7 @@ sudo systemctl restart prometheus
 **2. Create a dashboard with relevant graphs**:
   - Go to **Dashboards > New Dashboard**.
   - Select **Add new panel**, and choose **Prometheus** as the data source.
-  - Select "Import a Graph" and import this graph: https://grafana.com/grafana/dashboards/1860-node-exporter-full/
+  - Select "Import a Dashboard" and import this dashboard: https://grafana.com/grafana/dashboards/1860-node-exporter-full/
   - Save the dashboard with an appropriate name (e.g., **Application Server Monitoring**).
 
 ---
