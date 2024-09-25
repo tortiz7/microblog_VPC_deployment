@@ -295,6 +295,7 @@ Now the moment of truth: input your 'Web_Server' Public IP into your browser's a
 - **Why**: Did you forget about the `Monitoring` EC2? Prometheus and Grafana are critical for monitoring the health and performance of servers. Prometheus will scrape system metrics from the `Application_Server` EC2, and Grafana will visualize those metrics for easier analysis. Monitoring helps identify performance bottlenecks, resource usage trends, and potential system failures before they impact the app.
 
 - **How**:
+
 **1. Install Prometheus**:
 ```bash
 sudo apt update
@@ -352,7 +353,8 @@ sudo systemctl enable grafana-server
 
 - **Why**: Node Exporter is a Prometheus exporter that collects system-level metrics such as CPU, memory, and disk usage from the `Application_Server` EC2. This is essential for monitoring system health and resource usage on the server that is running our Microblog Flask Application.
 
-- **How**: 
+- **How**:
+  
 **1. Install Node Exporter**:
   
 ```bash
@@ -393,6 +395,7 @@ sudo systemctl enable node_exporter
 - **Why**: Prometheus scrapes system metrics from the 'Application_Server' EC2 (through Node Exporter) for monitoring purposes. The `prometheus.yml` file needs to be updated to include the private IP of the 'Application_Server' EC2 as a target to ensure Prometheus pulls data from it. By default, Node Exporter exposes metrics on Port 9100, hence why we had to add an Inbound Rule to our 'Application_Server' EC2 security group to allow traffic on Port 9100. Without this rule in place, Prometheus would be unable to collect the metrics exposed by Node Exporter. This is also why we needed to enable VPC Peering for our VPCs and add the Peering Connection to the Private Subnet Route Table - without that step, the `Monitoring` EC2 would be unable to communicate to the Private IP of our `Application_Server` EC2. 
 
 - **How**:
+  
 **1. Edit the `prometheus.yml` file**:
 
 ```bash
@@ -419,6 +422,7 @@ sudo systemctl restart prometheus
 - **Why**: Once Prometheus is scraping metrics, Grafana provides a user-friendly way to visualize the data. Creating a dashboard with graphs of system metrics (like CPU usage, memory usage, etc.) enables easy monitoring and helps track the health of the 'Application_Server' EC2 in real time. This ensures that 'Application_Server' operates smoothly and that any issues are quickly identified before they impact the application's performance or availability.
 
 - **How**:
+  
 **1. Add Prometheus as a data source in Grafana**:
   - Open Grafana in the browser: `http://<MONITORING_EC2_PUBLIC_IP>:3000`
   - Login with default credentials (`admin/admin`).
