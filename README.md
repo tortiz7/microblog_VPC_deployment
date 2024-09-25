@@ -282,7 +282,7 @@ If it worked, then you are ready to configure the Jenkins Pipeline!
 
 **OWASP Dependency Check**: Adds the OWASP plugin to check for known vulnerabilities.
 
-**Deploy Stage**: Deploys the app starting the chain of scripts that automates the deployment, outlined above
+**Deploy Stage**: Deploys the app by starting the chain of scripts that automates the deployment, outlined above
 
 [You can view the Jenkinsfile here to see the Deployment command and other aspects of the pipeline](/Jenkinsfile)
 Note the use of source and quotation wraparounds in the `Deploy` command, for the same reasons we used them when SSH'ing into the `Application Server` and running the `start_app.sh` script. This time, it's not an environment variable we need to persist, but rather the SSH session!
@@ -292,138 +292,145 @@ Now the moment of truth: input your 'Web_Server' Public IP into your browser's a
 ---
 ### Install Prometheus and Grafana on the Monitoring EC2
 
-- **Why**: Prometheus and Grafana are critical for monitoring the health and performance of servers. Prometheus scrapes system metrics from the Jenkins EC2, while Grafana visualizes those metrics for easier analysis. Monitoring helps identify performance bottlenecks, resource usage trends, and potential system failures before they impact the app.
-
-- **How**: 
-    1. **Install Prometheus**:
-       ```bash
-       sudo apt update
-       sudo apt install -y wget tar
-       wget https://github.com/prometheus/prometheus/releases/download/v2.36.0/prometheus-2.36.0.linux-amd64.tar.gz
-       tar -xvzf prometheus-2.36.0.linux-amd64.tar.gz
-       sudo mv prometheus-2.36.0.linux-amd64 /usr/local/prometheus
-       ```
-    2. **Create a service daemon for Prometheus**:
-       - To ensure Prometheus starts automatically:
-         ```bash
-         sudo nano /etc/systemd/system/prometheus.service
-         ```
-         Add the following to the file:
-         ```bash
-         [Unit]
-         Description=Prometheus Monitoring
-         After=network.target
-
-         [Service]
-         User=prometheus
-         ExecStart=/home/ubuntu/prometheus-2.54.1.linux-amd64/prometheus \
-         --config.file=/home/ubuntu/prometheus-2.54.1.linux-amd64/prometheus.yml \
-         --storage.tsdb.path=/home/ubuntu/prometheus-2.54.1.linux-amd64/data
-         Restart=always
-
-         [Install]
-         WantedBy=multi-user.target
-         ```
-         - Start and enable the service:
-           ```bash
-           sudo systemctl daemon-reload
-           sudo systemctl start prometheus
-           sudo systemctl enable prometheus
-           ```
-
-    3. **Install Grafana**:
-       - Add the Grafana APT repository:
-         ```bash
-         sudo apt install -y software-properties-common
-         sudo add-apt-repository "deb https://packages.grafana.com/oss/deb stable main"
-         wget -q -O - https://packages.grafana.com/gpg.key | sudo apt-key add
-         sudo apt update
-         sudo apt install -y grafana
-         ```
-       - Start and enable Grafana:
-         ```bash
-         sudo systemctl start grafana-server
-         sudo systemctl enable grafana-server
-	 ```
-  
----
-### Install Node Exporter on the Jenkins EC2
-
-- **Why**: Node Exporter is a Prometheus exporter that collects system-level metrics such as CPU, memory, and disk usage from the Jenkins EC2. This is essential for monitoring system health and resource usage on the Jenkins server.
-
-- **How**: 
-    1. **Install Node Exporter**:
-       ```bash
-       wget https://github.com/prometheus/node_exporter/releases/download/v1.3.1/node_exporter-1.3.1.linux-amd64.tar.gz
-       tar xvfz node_exporter-1.3.1.linux-amd64.tar.gz
-       sudo mv node_exporter-1.3.1.linux-amd64/node_exporter /usr/local/bin/
-       ```
-    2. **Create a service daemon for Node Exporter**:
-       ```bash
-       sudo nano /etc/systemd/system/node_exporter.service
-       ```
-       Add the following to the file:
-       ```bash
-       [Unit]
-       Description=Node Exporter
-       After=network.target
-
-       [Service]
-       User=node_exporter
-       ExecStart=/usr/local/bin/node_exporter
-
-       [Install]
-       WantedBy=multi-user.target
-       ```
-       - Start and enable the Node Exporter service:
-         ```bash
-         sudo systemctl daemon-reload
-         sudo systemctl start node_exporter
-         sudo systemctl enable node_exporter
-         ```
-
----
-### Configure Prometheus to Scrape Metrics from Jenkins EC2
-
-- **Why**: Prometheus scrapes system metrics from the Jenkins EC2 (through Node Exporter) for monitoring purposes. The `prometheus.yml` file needs to be updated to include the private IP of the Jenkins EC2 as a target to ensure Prometheus pulls data from it. By default, Node Exporter exposes metrics on Port 9100, hence why we had to add an Inbound Rule to our Jenkins EC2 security group to allow traffic on Port 9100. Without this rule in place, Prometheus would be unable to collect the metrics exposed by Node Exporter. 
+- **Why**: Did you forget about the `Monitoring` EC2? Prometheus and Grafana are critical for monitoring the health and performance of servers. Prometheus will scrape system metrics from the `Application_Server` EC2, and Grafana will visualize those metrics for easier analysis. Monitoring helps identify performance bottlenecks, resource usage trends, and potential system failures before they impact the app.
 
 - **How**:
-    1. **Edit the `prometheus.yml` file**:
-       ```bash
-       sudo nano /usr/local/prometheus/prometheus.yml
-       ```
-       Add the following section under `scrape_configs` to target the Jenkins EC2:
-       ```yaml
-       scrape_configs:
+**1. Install Prometheus**:
+```bash
+sudo apt update
+sudo apt install -y wget tar
+wget https://github.com/prometheus/prometheus/releases/download/v2.36.0/prometheus-2.36.0.linux-amd64.tar.gz
+tar -xvzf prometheus-2.36.0.linux-amd64.tar.gz
+sudo mv prometheus-2.36.0.linux-amd64 /usr/local/prometheus
+```
+
+**2. Create a service daemon for Prometheus**:
+To ensure Prometheus starts automatically:
+```bash
+sudo nano /etc/systemd/system/prometheus.service
+```
+Add the following to the file:
+```bash
+[Unit]
+Description=Prometheus Monitoring
+After=network.target
+
+[Service]
+User=prometheus
+ExecStart=/usr/local/prometheus/prometheus \
+--config.file=/usr/local/prometheus/prometheus.yml \
+--storage.tsdb.path=/usr/local/prometheus/data
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+```
+**3. Start and enable the service:**
+```bash
+sudo systemctl daemon-reload
+sudo systemctl start prometheus
+sudo systemctl enable prometheus
+```
+
+**4. Install Grafana**:
+Add the Grafana APT repository:
+```bash
+sudo apt install -y software-properties-common
+sudo add-apt-repository "deb https://packages.grafana.com/oss/deb stable main"
+wget -q -O - https://packages.grafana.com/gpg.key | sudo apt-key add
+sudo apt update
+sudo apt install -y grafana
+```
+**5. Start and enable Grafana:**
+```bash
+sudo systemctl start grafana-server
+sudo systemctl enable grafana-server
+```
+  
+---
+### Install Node Exporter on the Application_Server EC2
+
+- **Why**: Node Exporter is a Prometheus exporter that collects system-level metrics such as CPU, memory, and disk usage from the `Application_Server` EC2. This is essential for monitoring system health and resource usage on the server that is running our Microblog Flask Application.
+
+- **How**: 
+**1. Install Node Exporter**:
+  
+```bash
+wget https://github.com/prometheus/node_exporter/releases/download/v1.3.1/node_exporter-1.3.1.linux-amd64.tar.gz
+tar xvfz node_exporter-1.3.1.linux-amd64.tar.gz
+sudo mv node_exporter-1.3.1.linux-amd64/node_exporter /usr/local/bin/
+```
+**2. Create a service daemon for Node Exporter**:
+
+```bash
+sudo nano /etc/systemd/system/node_exporter.service
+```
+Add the following to the file:
+```bash
+[Unit]
+Description=Node Exporter
+After=network.target
+
+[Service]
+User=node_exporter
+ExecStart=/usr/local/bin/node_exporter
+
+[Install]
+WantedBy=multi-user.target
+
+```
+**3. Start and enable the Node Exporter service:**
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl start node_exporter
+sudo systemctl enable node_exporter
+```
+
+---
+### Configure Prometheus to Scrape Metrics from Application_Server EC2
+
+- **Why**: Prometheus scrapes system metrics from the 'Application_Server' EC2 (through Node Exporter) for monitoring purposes. The `prometheus.yml` file needs to be updated to include the private IP of the 'Application_Server' EC2 as a target to ensure Prometheus pulls data from it. By default, Node Exporter exposes metrics on Port 9100, hence why we had to add an Inbound Rule to our 'Application_Server' EC2 security group to allow traffic on Port 9100. Without this rule in place, Prometheus would be unable to collect the metrics exposed by Node Exporter. This is also why we needed to enable VPC Peering for our VPCs and add the Peering Connection to the Private Subnet Route Table - without that step, the `Monitoring` EC2 would be unable to communicate to the Private IP of our `Application_Server` EC2. 
+
+- **How**:
+**1. Edit the `prometheus.yml` file**:
+
+```bash
+sudo nano /usr/local/prometheus/prometheus.yml
+```
+
+Add the following section under `scrape_configs` to target the 'Application_Server' EC2:
+```bash
+scrape_configs:
          - job_name: 'jenkins'
            static_configs:
-             - targets: ['<Pivate_IP_Of_Jenkins_EC2>:9100']
-        ```
-    2. **Restart Prometheus** to apply the changes:
-       ```bash
-       sudo systemctl restart prometheus
-       ```
+             - targets: ['<Pivate_IP_of_App_Server_EC2>:9100']
+```
+**2. Restart Prometheus to apply the changes:**
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart prometheus
+```
 
 ---
 ### Add Prometheus as a Data Source in Grafana and Create Dashboards
 
-- **Why**: Once Prometheus is scraping metrics, Grafana provides a user-friendly way to visualize the data. Creating a dashboard with graphs of system metrics (like CPU usage, memory usage, etc.) enables easy monitoring and helps track the health of the Jenkins EC2 in real time. By visualizing metrics in Grafana, we can track system health and detect anomalies or resource exhaustion on the Jenkins EC2 in real time. This ensures that Jenkins operates smoothly and that any issues are quickly identified before they impact the application's performance or availability.
+- **Why**: Once Prometheus is scraping metrics, Grafana provides a user-friendly way to visualize the data. Creating a dashboard with graphs of system metrics (like CPU usage, memory usage, etc.) enables easy monitoring and helps track the health of the 'Application_Server' EC2 in real time. This ensures that 'Application_Server' operates smoothly and that any issues are quickly identified before they impact the application's performance or availability.
 
 - **How**:
-    1. **Add Prometheus as a data source in Grafana**:
-       - Open Grafana in the browser: `http://<MONITORING_EC2_PUBLIC_IP>:3000`
-       - Login with default credentials (`admin/admin`).
-       - Navigate to **Configuration > Data Sources**, click **Add data source**, and select **Prometheus**.
-       - In the **URL** field, enter: `http://localhost:9090` (since Prometheus is running locally on the Monitoring EC2).
-       - Click **Save & Test**.
+**1. Add Prometheus as a data source in Grafana**:
+  - Open Grafana in the browser: `http://<MONITORING_EC2_PUBLIC_IP>:3000`
+  - Login with default credentials (`admin/admin`).
+  - Navigate to **Configuration > Data Sources**, click **Add data source**, and select **Prometheus**.
+  - In the **URL** field, enter: `http://localhost:9090` (since Prometheus is running locally on the Monitoring EC2).
+  - Click **Save & Test**.
 
-    2. **Create a dashboard with relevant graphs**:
-       - Go to **Dashboards > New Dashboard**.
-       - Select **Add new panel**, and choose **Prometheus** as the data source.
-       - For each graph, write Prometheus queries like:
-         - CPU Usage: `node_cpu_seconds_total`
-         - Memory Usage: `node_memory_MemAvailable_bytes`
-       - Save the dashboard with an appropriate name (e.g., **Jenkins Monitoring**).
+**2. Create a dashboard with relevant graphs**:
+  - Go to **Dashboards > New Dashboard**.
+  - Select **Add new panel**, and choose **Prometheus** as the data source.
+  - Select "Import a Graph" and import this graph: https://grafana.com/grafana/dashboards/1860-node-exporter-full/
+  - Save the dashboard with an appropriate name (e.g., **Application Server Monitoring**).
 
 ---
 ## SYSTEM DESIGN DIAGRAM
