@@ -92,7 +92,7 @@ These four EC2s are named after their role within our infrastructure ecosystem. 
 ### Install Jenkins
 - **Why**: Jenkins automates the build and deployment pipeline. It pulls code from GitHub, tests it, and handles deployment once the Jenkinsfile is configured to do so. The big difference with this Jenkins deployment compared to our previous Workloads is that Jenkins will be hosted on its own EC2, separate from the app source code. We will still need to install Python 3.9 and it's dependencies on this Jenkins EC2, however, because Jenkins will need those dependencies in order to build and test the app code's logic.  
   
-- **How**: I created and ran the below script to install Jenkins, and it's language prerequisite Java (using Java 17 for this deployment). To save time, the script first updates and upgrades all packages included in the EC2, ensuring they are up-to-date and secure. The script also installs Python3.9 - the langauge our flask app relies on - and all the dependencies necessary for our application (Python3.9 venv and Python3.9-pip) - just as it did in the previous Workload; only difference is there will be no Nginx install in this script, since Nginx will be installed on the `Web_Server` EC2. SSH into the Jenkins EC2, create a file for the Jenkins install script, and then copy and paste the below into it:
+- **How**: I created and ran the below script to install Jenkins, and it's language prerequisite Java (using Java 17 for this deployment). To save time, the script first updates and upgrades all packages included in the EC2, ensuring they are up-to-date and secure. The script also installs Python3.9 - the langauge our flask app relies on - and all the dependencies necessary for our application (Python3.9 venv and Python3.9-pip) - just as it did in the previous Workload; only difference is there will be no Nginx installation in this script, since Nginx will be installed on the `Web_Server` EC2. SSH into the Jenkins EC2, create a file for the Jenkins install script, and then copy and paste the below into it:
 
 ``` bash
 #!/bin/bash
@@ -126,9 +126,10 @@ sudo cat /var/lib/jenkins/secrets/initialAdminPassword
 	Go back to the tab with your `Jenkins` EC2 instance terminal, and run the following command: `ssh -i <your_.pem_key_filename> ubuntu@<your_Web_Server's_Public_IP>`. Type yes when asked if you trust the host's identity to connect to the `Web_Server` EC2 and save it's unique "fingerprint" in the `known_hosts` folder in the `Jenkins` EC2s .ssh folder. Every subsequent SSH attempt to the `Web_Server` EC2 will check this fingerprint saved in the known_hosts folder and compare it with the fingerprint of the `Web_Server` so we know we're connecting to the correct server. This is an added security step that helps prevent "man-in-the-middle" attacks, wherein a bad actor attempts to impersonate a server in order to get your credentials. 
 
 ### Configure the NGINX Location block
-- **Why:** NGINX is a reverse proxy server between the client browser and our Microblog application. It is a gatekeeper, managing incoming traffic to assist with load balancing in the case of scalability, strengthening security by validating SSL/TLS certificates for incoming HTTPS requests, and increasing performance by caching certain static content (images, JavaScript files) and forwarding all dynamic content to Gunicorn (on Port 5000, only exposed locally, and not to the internet).
 
-As noted in the Jenkins installation step, Nginx is installed on the `Web_server` EC2, and thus we must specifically configure the location block to route incoming HTTPS requests from NGINX Port 80 on the `Web_Server` to the Gunicorn Port 5000 on the `Application_Server`. The Location block below will show you how. 
+- **Why:** NGINX is a reverse proxy server between the client browser and our Microblog application. It is a gatekeeper, managing incoming traffic to assist with load balancing in the case of scalability, strengthening security by validating SSL/TLS certificates for incoming HTTPS requests, and increasing performance by caching certain static content (images, JavaScript files) and forwarding all dynamic content to Gunicorn.
+
+As noted in the Jenkins installation step, NGINX is installed on the `Web_server` EC2, and thus we must specifically configure the location block to route incoming HTTPS requests from NGINX Port 80 on the `Web_Server` to the Gunicorn Port 5000 on the `Application_Server`. The Location block below will show you how. 
 
 - **How:** Since we are already SSH'd into the `Web_Server` EC2 from the `Jenkins` EC2, we can nano into the NGINX Configuration file at this location: `/etc/nginx/sites-enabled/default` and add the following to the Location block. Note that unlike the previous workload, the url for the proxy_pass **must use the Private IP of your Application Server** in order to route the necessary traffic to Gunicorn:
   
@@ -139,67 +140,87 @@ proxy_set_header Host $host;
 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 }  
 ```
-
 ---
 ### SSH Into the Application_Server
 
-- **Why:** Now, we will connect to the `Application_Server` for the first time. 
----
-### Configure and Run the Microblog App on the EC2
-- **Why:** Before we can automate the deployment of the Microblog application via Jenkins, we want to ensure we have every component we need to run it. To do so, we will clone the source code repository from GitHub to our EC2's, and then create a venv in that directory, install all dependencies, set the environment variable, compile and migrate the databases, and then run Gunicorn to serve the app.
+- **Why:** Now, we will connect to the `Application_Server` EC2 for the first time. Since the 'Application_Server' resides in our Private Subnet, it does not have a Public IP associated with it - so we cannot connect to it from the AWS GUI like we would our `Jenkins` and `Web_Server` EC2. To connect, we will need the .pem file that was downloaded to your local computer when you first created the `Application_Server` EC2 and it's associated Key Pair.
 
- - **How:**
- -  ```bash
-     git clone https://github.com/tortiz7/microblog_EC2_deployment.git
-     cd microblog_EC2_deployment
-     python3.9 -m venv venv
-     source venv/bin/activate
-     ```
-   - Install dependencies:
-     ```bash
-     pip install -r requirements.txt
-     pip install gunicorn pymysql cryptography
-     ```
-   - The next three commands were new to me, and do the following (you'd run them in the terminal as commands as they are written below):
-   - **`FLASK_APP=microblog.py`**: Sets the Flask application context, directing the Flask CLI to use `microblog.py` as the entry point for the application. This is essential for running and managing the app.
-
-   - **`flask translate compile`**: Compiles translation files, converting `.po` files into `.mo` files for Flask-Babel, enabling multi-language support. This command ensures that the latest translations are incorporated into the application.
-
-   - **`flask db upgrade`**: Applies database migrations to update the schema according to the current models in the application. This command is vital for maintaining the integrity of the database and ensuring that all changes to the data structure are reflected accurately.
-  
-   - Run Gunicorn to serve the app:
-     ```bash
-     gunicorn -b :5000 -w 4 microblog:app
-     ```
-    
+- **How:** There is a method to copy the key directly from your local machine to the `Web_Server`...That I will show you next time! For now, navigate to the `~/.ssh` in your `Web_Server` EC2, and nano a new file called App_Server_Key.pem. Then, locate the .pem file you saved when you created the `Application_Server`, open it with your word proccessor of choice, and copy the **full** contents of that .pem file, including the beginning and ending RSA lines. Then, navigate back to your `Web_Server` and paste the contents into the App_Server_Key.pem. This key now holds the .pem key that pairs to the .pub key already in the `Application_Server`, and you can use the following command to SSH into the `Application_Server`: `ssh -i App_Server_Key.pem ubuntu@<your_App_Server's_Private_IP>`. Note that we are using the Private IP here because the Application and Web Servers are in the same VPC, and thus are able to communicate to one another via their Private IP's. No need for VPC Peering just yet! 
 ---
 ### Create Gunicorn Daemon
 
-- **Why**: We created a Gunicorn daemon to ensure the Microblog app runs as a service and automatically starts on boot. This helps manage the app's lifecycle, ensuring that Gunicorn starts, stops, and restarts as needed without manual intervention. More on this in the **Issues/Troubleshooting** section below.
+- **Why**: Now that we are connected to the `Application_Server`, we will create a Gunicorn daemon. We did so in the previous Workload, and we will do so again for the same reason: to ensure the Microblog app runs as a service and automatically starts on boot. This helps manage the app's lifecycle, ensuring that Gunicorn starts, stops, and restarts as needed without manual intervention. We have not installed gunicorn unto the `Application_Server` yet, but we need the Gunicorn daemon first because we will Clone the GitHub Repository with the source code, install all needed programs and dependencies, and run the Flask application all in one script during the next step. 
   
-- **Where**: The Gunicorn service file was created in the `/etc/systemd/system/` directory on the Jenkins EC2 instance. This is where system-level services are managed on Linux systems.
+- **Where**: The Gunicorn service file will be created in the `/etc/systemd/system/` directory on the Applicatio Server EC2. This is where system-level services are managed on Linux systems.
 
-- **Service File Contents**: Below is the configuration we used for the Gunicorn daemon:
+Below is the configuration for the Gunicorn daemon:
   
 ```bash
-Unit]
+[Unit]
 Description=Gunicorn instance to serve my application
 After=network.target
 
 [Service]
 User=ubuntu
 Group=www-data
-WorkingDirectory=/home/ubuntu/WL3
+WorkingDirectory=/home/ubuntu/microblog_VPC_deployment
 Environment="FLASK_APP=microblog.py"
-ExecStart=/home/ubuntu/WL3/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:5000 microblog:app
+ExecStart=/home/ubuntu/microblog_VPC_deployment/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:5000 microblog:app
 Restart=always
 
 [Install]
 WantedBy=multi-user.target
 ```
 
+One notable difference between this Gunicorn daemon and the last one we used is the IP allowed to communicate to Gunicorn via it's binding port. Before, we bound Gunicorn to `127.0.0.1:5000`, with the IP portion allowing request traffic from within the same EC2 instance. Since NGINX is on a different EC2 in this Workload, we must use an IP that exposes traffic from other IPs in the VPC. Since we only have one instance that hosts NGINX, and our Application EC2 is secure in our Private Subnet, we can safely expose Gunicorn to all IP's in the VPC in order for NGINX to properly serve it requests.
+
 ---
-### Create `test_app.py` Script for Pytest
+### Create the `start_app.sh`
+- **Why:** The purpose of this workload is to truly automate the deployment of the Microblog Application. As such, we will create a script that does just that! This script will update and upgrade all the packages on the EC2, install python3.9 and it's dependencies, clone the App source code repository (and delete the old repository and reclone it upon successive runs), create the venv within the App directory and install all required dependencies for the Application to function, and then restart the Gunicorn system to ensure it is serving our Flask application in the background. 
+
+ - **How:** Run `nano start_app.sh` in the home directory of the `Application_Server` EC2 and copy and paste the following script into it:
+
+```bash
+#!/bin/bash
+
+sudo apt update -y
+sudo apt upgrade -y
+sudo add-apt-repository ppa:deadsnakes/ppa -y
+sudo apt update -y
+sudo apt install -y python3.9 python3.9-venv python3-pip
+
+repo_dir="microblog_VPC_deployment"
+repo_url="https://github.com/tortiz7/microblog_VPC_deployment.git"
+
+if [ -d "$repo_dir" ]; then
+        rm -rf "$repo_dir"
+fi
+
+git clone "$repo_url"
+cd $repo_dir
+
+python3.9 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+pip install gunicorn pymysql cryptography
+FLASK_APP=microblog.py
+flask translate compile
+flask db upgrade
+sudo systemctl restart gunicorn
+```
+
+This powerful script has everything you need to launch the Microblog application from any EC2 you provision (provided you create the Gunicorn daemon first). Ensure the Microblog Application is now up and running by copying and pasting the Public IP of your `Web_Server` EC2 into your browser's address bar. Success?
+
+---
+### Create the `setup.sh` Script
+- **Why:** If your Microblog Application successfully launched, than you are ready to move onto the next step of truly automating this deployment! Go back to your 'Web_Server' EC2 instance and run 'cd ~ && nano setup.sh'. This script, when run, will SSH into the `Application_Server` EC2 and run the `start_app.sh` script we just created.
+
+- **How:** Copy and paste the following into the file you just created:
+
+```bash
+
+---
+### Create the `test_app.py` Script for Pytest
 
 - **Why:** We created the `test_app.py` script for Pytest to automate testing of key functionality in the Microblog app, specifically ensuring that critical components such as the homepage and login functionality work as expected. This is vital for continuous integration (CI) pipelines, as automated tests help identify issues early in the build process, preventing bugs from reaching production and improving the overall quality of the application.
 
@@ -240,8 +261,6 @@ def test_404_page(client):
   response = client.get('/nonexistent')
   assert response.status_code == 404
 ```
-
-
 ---
 ### Set the 'Jenkins' User as a Sudoer
 - **Why:** The Jenkinsfile Deploy stage requires Jenkins to run a command with sudo, which requires the Jenkins user to have Sudoer permissions. I don't want to ruin all the fun - you'll see what that command is below, in the "Issues/Troubleshooting" section.
