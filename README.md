@@ -275,9 +275,13 @@ If it worked, then you are ready to configure the Jenkins Pipeline!
 - **How**: Note that you will need to log into Jenkins (<Public_IP_of_Jenkins_Server:8080> in address bar) and add the OWASP Plugin by navigating to "Manage Jenkins < Available Plugins < Search 'OWASP' < Select 'OWASP Dependency Check'". This time around, we downloaded an API Key from the NVD website (https://nvd.nist.gov/developers/request-an-api-key), added that into our Jenkins Credentials Manager, and then referenced it in our `OWASP Scan` stage to speed up the OWASP scan. The Jenkinsfile should be configured as such:
 
 **Build Stage**: Creates virtual environment, installs dependencies, runs migrations, and compiles translations.
+
 **Test Stage**: Configures Pytest to run [the same pytest as WL3](tests/unit/test_app.py) 
+
 **Clean Stage**: Stops running Gunicorn instances before each new deploy.
+
 **OWASP Dependency Check**: Adds the OWASP plugin to check for known vulnerabilities.
+
 **Deploy Stage**: Deploys the app starting the chain of scripts that automates the deployment, outlined above
 
 [You can view the Jenkinsfile here to see the Deployment command and other aspects of the pipeline](/Jenkinsfile)
