@@ -3,9 +3,6 @@
 ---
 ### Purpose
 
-The purpose of this project is to deploy a Microblog Flask application on self-built infrastructure using AWS EC2 instances. Through this workload, we explored various concepts related to cloud infrastructure, Continuous Integration/Continuous Deployment (CI/CD), and application monitoring. By configuring and managing our own servers, we strengthened our skills in system administration, security group management, and application deployment.
-
-This project emphasizes hands-on experience with tools such as Jenkins for automation, Prometheus for monitoring, and Grafana for visualization. Additionally, we learned to troubleshoot and optimize our setup, ensuring that our application operates efficiently and is resilient against potential issues. Overall, this workload provides a comprehensive understanding of how to create and manage a robust application infrastructure from the ground up.
 
 ---
 ## STEPS
@@ -479,72 +476,7 @@ Most of the issues I ran into while building the infrastucture for this workload
 ---  
 ### OPTIMIZATION
 
-#### **Advantages of Provisioning Our Own Infrastructure**
-**Why this is a "Good System"**
-1. **Full Control Over Infrastructure**: Provisioning our own resources allows for granular control over every aspect of the infrastructure. From configuring the EC2 instances, installing services like Jenkins, Prometheus, and Grafana, to managing security groups and networking. This level of control offers flexibility, especially in troubleshooting and custom configuration that might not be possible with managed services like Elastic Beanstalk.
-   
-2. **Cost Efficiency**: By manually provisioning resources, you can optimize your spending. You can choose smaller instance types, manage start/stop schedules, and ensure you're only paying for what you actually need. With managed services, you're paying for convenience, but sometimes at a higher cost.
-
-3. **Customization**: This system allows the integration of tools like Prometheus and Grafana for monitoring, a custom CI/CD pipeline using Jenkins, and the flexibility to adjust configurations as per the workload's unique requirements. Such customization might not be as easy or even possible with managed services.
-
-4. **Enhanced Learning and Skill Development**: Building infrastructure from scratch strengthens fundamental DevOps skills, including cloud infrastructure management, networking, system monitoring, and CI/CD pipeline creation. This project provided hands-on experience with AWS, system architecture, monitoring, and deployment strategies.
-
 ---
-
-#### **Disadvantages of Provisioning Our Own Infrastructure**
-**Why this could be a "Bad System"**
-1. **Increased Management Overhead**: Provisioning our own resources requires constant oversight. We must handle patching, updates, monitoring, and scaling on our own. This can lead to inefficiencies and missed opportunities for automated optimizations that managed services provide out-of-the-box.
-
-2. **Scalability Concerns**: While we can scale manually by adding more instances or adjusting instance types, the lack of automatic scaling might lead to resource bottlenecks or underutilization during varying traffic loads. Elastic Beanstalk or other managed services provide auto-scaling, making it easier to handle fluctuating workloads without intervention.
-
-3. **Risk of Misconfiguration**: As we manage all components ourselves, there is a higher chance of misconfigurations that could compromise security, stability, or performance. For example, improperly configured Security Groups or network permissions could expose the system to unnecessary risk.
-
-4. **Time-Consuming Setup**: Deploying an entire infrastructure manually, including monitoring and CI/CD pipelines, takes significantly more time compared to using Elastic Beanstalk or a similar service where much of the setup is automated.
-
----
-
-#### **How to Optimize the System to Address These Issues - Managed Services Edition**
-1. **Introduce Automation**:
-   - **Infrastructure as Code (IaC)**: We could tilize tools like **Terraform** or **AWS CloudFormation** to automate the provisioning of resources. This would reduce manual effort and ensure consistency across deployments.
-   - **CI/CD Automation**: Further optimize the Jenkins pipeline by adding automatic triggers for scaling the infrastructure based on demand (e.g., leveraging AWS Lambda functions or CloudWatch Alarms to provision resources as needed).
-   
-2. **Auto-Scaling and Load Balancing**:
-   - Incorporate **Auto Scaling Groups (ASGs)** and **Elastic Load Balancers (ELBs)** to ensure that the infrastructure can handle varying traffic loads dynamically. This would eliminate the need for manual scaling and reduce the risk of bottlenecks or downtime during traffic spikes.
-   
-3. **Security Best Practices**:
-   - Implement more robust security practices, such as **AWS Secrets Manager** to handle sensitive data and **AWS Key Management Service (KMS)** to encrypt data in transit and at rest.
-   - Audit the **Security Groups** and **IAM roles** to ensure the principle of least privilege is being followed.
-
-4. **Monitoring and Alerting**:
-   - While Prometheus and Grafana offer great monitoring, adding **AWS CloudWatch** or similar monitoring services could provide additional real-time insights and more automated alerting capabilities.
-   - Set up custom **CloudWatch alarms** that can trigger based on resource utilization metrics or any performance anomalies detected through Prometheus.
-
-5. **Consider Managed Services for Certain Components**:
-   - For example, using a managed database service like **Amazon RDS** or **AWS Elasticache** can offload the management of database scaling, backups, and patching. Similarly, **AWS Fargate** or **Elastic Beanstalk** could handle scaling and deployment of the application without needing to manage EC2 instances directly.
-
----
-
-### Additional Optimizations Without Full Reliance on Managed Services
-
-1. **Use Docker Containers**: Containerizing the Microblog application with Docker can help streamline deployments and improve consistency across environments. Containers can be orchestrated with tools like **Docker Compose** or **Kubernetes** without fully relying on managed services.
-
-2. **Caching Strategies**: Implement caching mechanisms using tools like **Redis** or **Memcached** to reduce load on the database and speed up response times without relying on managed caching services.
-
-3. **Regular Backups**: Implement a backup strategy using tools like **rsync** or **cron jobs** to automate backups of application data and configurations, ensuring that you can restore quickly in case of failure without relying on managed backup solutions.
-
-By implementing these optimizations, we would maintain the benefits of provisioning our own infrastructure while addressing many of the shortcomings that come with manual management.
-
-## Conclusion
-
-The successful deployment of the Microblog application on self-provisioned infrastructure marks a significant step in our understanding of cloud computing and application deployment. By leveraging EC2 instances, we not only gained hands-on experience with essential tools such as Jenkins, Prometheus, and Grafana, but we also explored the intricacies of managing our own infrastructure.
-
-Throughout this project, we faced various challenges, from configuring security groups to optimizing build processes. Each issue encountered served as a learning opportunity, enhancing our problem-solving skills and deepening our knowledge of CI/CD pipelines.
-
-By implementing a monitoring solution with Prometheus and Grafana, we ensured the reliability of our application, providing real-time insights into system performance. This project has demonstrated the importance of having a robust infrastructure, tailored to our specific needs, while also highlighting the advantages of understanding the underlying technologies rather than solely relying on managed services.
-
-As we move forward, the skills and knowledge gained from this workload will be invaluable in our future endeavors in cloud computing and application development. We are now better equipped to tackle complex deployments and optimize system performance, laying a strong foundation for further exploration in the world of DevOps.
-
-
 ## Documentation
 
 *****
