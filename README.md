@@ -428,7 +428,7 @@ sudo systemctl restart prometheus
 ---
 ## ISSUES/TROUBLESHOOTING
 
-	Most of the issues I ran into while building the infrastucture for this workload and deploying the Microblog Flask Application via Jenkins were documented above, as I went through the steps where the issues were confronted. This section will serve as a quick roundup of all those issues, so you can avoid them!
+	Most of the issues I ran into while building the infrastructure for this workload and deploying the Microblog Flask Application via Jenkins were documented above, as I went through the steps where the issues were confronted. This section will serve as a quick roundup of all those issues, so you can avoid them!
 
 ### Issue: Gunicorn IP and Port Binding
 - **Problem**: As I mentioned above in the **Create Gunicorn Daemon** step, the IP/Port binding configuration for every Flask app deployment we've done so far has been 127.0.0.1:5000 - meaning Gunicorn listens to requests routed from an NGINX port **on the local EC2**. This posed an issue with this Workload, because for the first time NGINX and Gunicorn were not installed on the same EC2 - there is a separate `Web_Server` EC2 that serves to route requests to the `Application_Server`EC2 where the Gunicorn and the source code for the Flask application resides. 
@@ -501,11 +501,11 @@ The infrastructure we've created for this workload effectively addresses these c
 ---
 ### CONCLUSION
 
-	Workload 4 ably builds upon the workloads we've deployed before, successfully demonstrating the deployment and management of a multi-tier architecture for our Microblog Flask Applicaiton. Through the creation of dedicated EC2 instances for deployment, production and monitoring, we ensured minimal disruption during updates and established a streamlined CI/CD pipeline using Jenkins for efficient code integration and testing.
+	Workload 4 ably builds upon the workloads we've deployed before, successfully demonstrating the deployment and management of a multi-tier architecture for our Microblog Flask Application. Through the creation of dedicated EC2 instances for deployment, production, and monitoring, we ensured minimal disruption during updates and established a streamlined CI/CD pipeline using Jenkins for efficient code integration and testing.
 
-	Throughout the Workload, we learned the importance of separating environments to mitigate risks, as well as the advantages of utilizing monitoring tools like Prometheus and Grafana to maintain system health. Additionally, the integration of security best practices and a structured approach to resource management has contributed to a more resilient and scalable infrastructure.
+Throughout the Workload, we learned the importance of separating environments to mitigate risks, as well as the advantages of utilizing monitoring tools like Prometheus and Grafana to maintain system health. Additionally, the integration of security best practices and a structured approach to resource management has contributed to a more resilient and scalable infrastructure.
 
-	Looking ahead, the suggested optimizations, such as adopting containerization with AWS Fargate, implementing blue-green deployments, and enhancing security protocols, will further strengthen the infrastructure's capabilities, allowing it to adapt to evolving user demands while ensuring high availability and performance. This Workload serves as a valuable foundation for future developments and improvements, paving the way for a robust cloud-based application environment.
+Looking ahead, the suggested optimizations, such as adopting containerization with AWS Fargate, implementing blue-green deployments, and enhancing security protocols, will further strengthen the infrastructure's capabilities, allowing it to adapt to evolving user demands while ensuring high availability and performance. This Workload serves as a valuable foundation for future developments and improvements, paving the way for a robust cloud-based application environment.
 
 ---
 ## Documentation
