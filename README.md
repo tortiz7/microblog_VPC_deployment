@@ -3,7 +3,7 @@
 ---
 ### PURPOSE
 
-	Hello! If you've been following my Workload series for deploying Flask Applications using AWS infrastructure, then welcome to the fourth entry. The purpose of Workload 4 is to design and implement a robust cloud infrastructure for the Microblog Flask Application we deployed in Workload 3, this time focusing on deploying a scalable, secure, and efficient mutli-tiered architecture using AWS services. This Workload emphasizes best practices in cloud deployment, including continuous integration and continuous delivery (CI/CD) with Jenkins, effective resource management across multiple EC2 insances, and a strong emphasis on monitoring and security. By establishing a clear separation between deployment and production environments, this project aims to enhance system reliability while optimizing resource utilization and operational efficiency.
+Hello! If you've been following my Workload series for deploying Flask Applications using AWS infrastructure, then welcome to the fourth entry. The purpose of Workload 4 is to design and implement a robust cloud infrastructure for the Microblog Flask Application we deployed in Workload 3, this time focusing on deploying a scalable, secure, and efficient mutli-tiered architecture using AWS services. This Workload emphasizes best practices in cloud deployment, including continuous integration and continuous delivery (CI/CD) with Jenkins, effective resource management across multiple EC2 insances, and a strong emphasis on monitoring and security. By establishing a clear separation between deployment and production environments, this project aims to enhance system reliability while optimizing resource utilization and operational efficiency.
 
 ---
 ## STEPS
@@ -69,7 +69,7 @@ so they can be reachable from the internet.
 7. The Inbound rules should allow network traffic on Ports 22 (SSH), 9000 (Prometheus), 3000 (Grafana), and 9100 (Node Exporter), and allow all Outbound traffic.
 8. Launch the instance!
            
-	These four EC2s are named after their role within our infrastructure ecosystem. The **Jenkins** EC2 will house our Jenkins workspace where the build and testing will occur; The **Application Server** will host all our Application Source code, and will be where our application is deployed from via a script; the **Web Server** will act as a bridge between our Jenkins and Application Server EC2s and will host the NGINX service that will proxy pass network traffic to our Application Server, which is inaccessible from the internet by itself; and our final EC2, **Monitoring**, will host the Prometheus and Grafana services, which will allow us to scrape vital metrics from the Application Server and visualize them in a helpful dashboard in Grafana, empowering us to take action when resources are taxed and perform necessary maintenance on the Application Server when needed.
+These four EC2s are named after their role within our infrastructure ecosystem. The **Jenkins** EC2 will house our Jenkins workspace where the build and testing will occur; The **Application Server** will host all our Application Source code, and will be where our application is deployed from via a script; the **Web Server** will act as a bridge between our Jenkins and Application Server EC2s and will host the NGINX service that will proxy pass network traffic to our Application Server, which is inaccessible from the internet by itself; and our final EC2, **Monitoring**, will host the Prometheus and Grafana services, which will allow us to scrape vital metrics from the Application Server and visualize them in a helpful dashboard in Grafana, empowering us to take action when resources are taxed and perform necessary maintenance on the Application Server when needed.
 
 ---
 ### Install Jenkins
@@ -155,7 +155,7 @@ Restart=always
 WantedBy=multi-user.target
 ```
 
-	One notable difference between this Gunicorn daemon and the last one we used is the IP allowed to communicate to Gunicorn via it's binding port. Before, we bound Gunicorn to `127.0.0.1:5000`, with the IP portion allowing request traffic from within the same EC2 instance. Since NGINX is on a different EC2 in this Workload, we must use an IP that exposes traffic from other IPs in the VPC. Since we only have one instance that hosts NGINX, and our Application EC2 is secure in our Private Subnet, we can safely expose Gunicorn to all IP's in the VPC in order for NGINX to properly serve it requests.
+One notable difference between this Gunicorn daemon and the last one we used is the IP allowed to communicate to Gunicorn via it's binding port. Before, we bound Gunicorn to `127.0.0.1:5000`, with the IP portion allowing request traffic from within the same EC2 instance. Since NGINX is on a different EC2 in this Workload, we must use an IP that exposes traffic from other IPs in the VPC. Since we only have one instance that hosts NGINX, and our Application EC2 is secure in our Private Subnet, we can safely expose Gunicorn to all IP's in the VPC in order for NGINX to properly serve it requests.
 
 ---
 ### Create the `start_app.sh`
@@ -192,7 +192,7 @@ flask db upgrade
 sudo systemctl restart gunicorn
 ```
 
-	This powerful script has everything you need to launch the Microblog application from any EC2 you provision (provided you create the Gunicorn daemon first). Ensure the Microblog Application is now up and running by copying and pasting the Public IP of your `Web_Server` EC2 into your browser's address bar. Success?
+This powerful script has everything you need to launch the Microblog application from any EC2 you provision (provided you create the Gunicorn daemon first). Ensure the Microblog Application is now up and running by copying and pasting the Public IP of your `Web_Server` EC2 into your browser's address bar. Success?
 
 ---
 ### Create the `setup.sh` Script
@@ -206,7 +206,7 @@ sudo systemctl restart gunicorn
 ssh -i ~/.ssh/app_server_key.pem ubuntu@<your_App_Server_Private_IP> 'source start_app.sh'
 ```
 
-	Two things of note with this one-line script: the use of source to run the script, rather than ./ like we normally would, and the wrapping of the command in single quotations. First, the latter - we wrap the command in single quotations to ensure that it is treated as a single command by the shell environment that it is executed in (in this case, the `Application_Server`). If we don't wrap the command in the single quotes, than the shell that we are running the `setup.sh` script in (the `Web_Server`) will attempt to run the command, even after SSH'ing into the `Application_Server` - you will receive a "No File" error upon returning to the `Web_Server`. We use `source' to execute the `start_app.sh` script to ensure that the changes made to the `Application_Server` by the script persist after the script is finished. This is important because the script sets an environment variable (`FLASK_APP=microblog.py`) that we need to persist in order for the Microblog app to function correctly. 
+Two things of note with this one-line script: the use of source to run the script, rather than ./ like we normally would, and the wrapping of the command in single quotations. First, the latter - we wrap the command in single quotations to ensure that it is treated as a single command by the shell environment that it is executed in (in this case, the `Application_Server`). If we don't wrap the command in the single quotes, than the shell that we are running the `setup.sh` script in (the `Web_Server`) will attempt to run the command, even after SSH'ing into the `Application_Server` - you will receive a "No File" error upon returning to the `Web_Server`. We use `source' to execute the `start_app.sh` script to ensure that the changes made to the `Application_Server` by the script persist after the script is finished. This is important because the script sets an environment variable (`FLASK_APP=microblog.py`) that we need to persist in order for the Microblog app to function correctly. 
 
 ---
 ### Time for VPC Peering!
@@ -231,7 +231,7 @@ ssh -i ~/.ssh/app_server_key.pem ubuntu@<your_App_Server_Private_IP> 'source sta
  12. Follow the steps to Edit the routes for the Public Subnet and associate the Peering Connection, only this time 
 using the CIDR Block for your Custom VPC in the "Destinations" column
 
-	Viola! You can now SSH from your `Jenkins` EC2 into your `Web` EC2 using the Web's Private IP instead of it's Public IP. I'll explain why as we go over the Jenkinsfile configuration. Before we do that, though, we'll need to address another matter.
+Viola! You can now SSH from your `Jenkins` EC2 into your `Web` EC2 using the Web's Private IP instead of it's Public IP. I'll explain why as we go over the Jenkinsfile configuration. Before we do that, though, we'll need to address another matter.
 
 ---
 ### Another Keygen?!
@@ -267,10 +267,10 @@ If it worked, then you are ready to configure the Jenkins Pipeline!
 
 **Deploy Stage**: Deploys the app by starting the chain of scripts that automates the deployment, outlined above
 
-	[You can view the Jenkinsfile here to see the Deployment command and other aspects of the pipeline](/Jenkinsfile)
+[You can view the Jenkinsfile here to see the Deployment command and other aspects of the pipeline](/Jenkinsfile)
 Note the use of source and quotation wraparounds in the `Deploy` command, for the same reasons we used them when SSH'ing into the `Application Server` and running the `start_app.sh` script. This time, it's not an environment variable we need to persist, but rather the SSH session!
 
-	Now the moment of truth: input your 'Web_Server' Public IP into your browser's address bar and hit Enter. Is the Microblog Application running? If so, then good job! You've automated the deployment of this application. But the jobs not done yet...
+Now the moment of truth: input your 'Web_Server' Public IP into your browser's address bar and hit Enter. Is the Microblog Application running? If so, then good job! You've automated the deployment of this application. But the jobs not done yet...
 
 ---
 ### Install Prometheus and Grafana on the Monitoring EC2
@@ -428,7 +428,7 @@ sudo systemctl restart prometheus
 ---
 ## ISSUES/TROUBLESHOOTING
 
-	Most of the issues I ran into while building the infrastructure for this workload and deploying the Microblog Flask Application via Jenkins were documented above, as I went through the steps where the issues were confronted. This section will serve as a quick roundup of all those issues, so you can avoid them!
+Most of the issues I ran into while building the infrastructure for this workload and deploying the Microblog Flask Application via Jenkins were documented above, as I went through the steps where the issues were confronted. This section will serve as a quick roundup of all those issues, so you can avoid them!
 
 ### Issue: Gunicorn IP and Port Binding
 - **Problem**: As I mentioned above in the **Create Gunicorn Daemon** step, the IP/Port binding configuration for every Flask app deployment we've done so far has been 127.0.0.1:5000 - meaning Gunicorn listens to requests routed from an NGINX port **on the local EC2**. This posed an issue with this Workload, because for the first time NGINX and Gunicorn were not installed on the same EC2 - there is a separate `Web_Server` EC2 that serves to route requests to the `Application_Server`EC2 where the Gunicorn and the source code for the Flask application resides. 
@@ -484,7 +484,7 @@ The infrastructure we've created for this workload effectively addresses these c
 
 **Good System Evaluation**
 
-	The infrastructure we've provisioned in this project can be considered a "good system" as it follows best practices for separation of concerns, implements CI/CD for automated deployments, and incorporates monitoring for proactive issue management. However, there are areas where we can make enhancements.
+The infrastructure we've provisioned in this project can be considered a "good system" as it follows best practices for separation of concerns, implements CI/CD for automated deployments, and incorporates monitoring for proactive issue management. However, there are areas where we can make enhancements.
 
 **Optimization Suggestions**
 
@@ -496,12 +496,12 @@ The infrastructure we've created for this workload effectively addresses these c
 
 4. **Optimize Security Groups:** While Workload 4 already necessitates us creating four security groups, we can stand to ensure that they are configured to use the principle of least privilege. All security groups should be egularly audited and refined to ensure only necessary traffic is allowed, and implementing AWS WAF (Web Application Firewall) would give us additional protection against common web exploits.
 
-	By implementing these optimizations, our cloud infrastructure ecosystem can achieve improved resilience, scalability, and security, ensuring a robust deployment and production environment capable of adapting to changing demands while maintaining high availability for our users.
+By implementing these optimizations, our cloud infrastructure ecosystem can achieve improved resilience, scalability, and security, ensuring a robust deployment and production environment capable of adapting to changing demands while maintaining high availability for our users.
 
 ---
 ### CONCLUSION
 
-	Workload 4 ably builds upon the workloads we've deployed before, successfully demonstrating the deployment and management of a multi-tier architecture for our Microblog Flask Application. Through the creation of dedicated EC2 instances for deployment, production, and monitoring, we ensured minimal disruption during updates and established a streamlined CI/CD pipeline using Jenkins for efficient code integration and testing.
+Workload 4 ably builds upon the workloads we've deployed before, successfully demonstrating the deployment and management of a multi-tier architecture for our Microblog Flask Application. Through the creation of dedicated EC2 instances for deployment, production, and monitoring, we ensured minimal disruption during updates and established a streamlined CI/CD pipeline using Jenkins for efficient code integration and testing.
 
 Throughout the Workload, we learned the importance of separating environments to mitigate risks, as well as the advantages of utilizing monitoring tools like Prometheus and Grafana to maintain system health. Additionally, the integration of security best practices and a structured approach to resource management has contributed to a more resilient and scalable infrastructure.
 
