@@ -17,7 +17,7 @@ Hello! If you've been following my Workload series for deploying Flask Applicati
     2. Select "Create VPC"
     3. Select "VPC and More" in the "Resources to create" section to provision the VPC, AZ, Public and Private Subnets, and NAT Gateway in one go
     4. Choose your IPv4 CIDR Block, which will determine the size of your VPC and available IPs within it. I chose 10.0.0.0/16, which allots 65,536 IP blocks for my needs. More than enough for scaling the application!
-    5. Choose 1 AZ zone for this project. You can customize it's region, or leave it at the default setting (mine is in US-east-2a (Ohio))
+    5. Choose 1 AZ zone for this project. You can customize it's region, or leave it at the default setting (mine is in US-east-1a (N. Virginia))
     6. Select 1 Public and Private Subnet each under their respective menus
     7. Select 1 NAT Gateway for your AZ - note that this will cost you money as long as it is active and reachable!
     8. Leave DNS hostnames and resolution enabled under the "DNS Options" setting - this will allow your publicly accessible EC2's to be reached via their Public IP's
@@ -56,7 +56,7 @@ so they can be reachable from the internet.
 5. In "Network Settings", select the VPC we configured in Step 1 for this EC2.
 6. For the Subnet field, select the Private Subnet you created. This EC2 will not need a Public IP, so do not enable the auto-assigning of one.
 7. Create a Security Group that allows inbound traffic to the services and applications the EC2 will need and name it after the EC2 it will control.
-8. The Inbound rules should allow network traffic on Ports 22 (SSH), 80 (Gunicorn), and 9100 (Node Exporter), and allow all Outbound traffic.
+8. The Inbound rules should allow network traffic on Ports 22 (SSH), 5000 (Gunicorn), and 9100 (Node Exporter), and allow all Outbound traffic.
 9. Launch the instance!
 
 **The Monitoring EC2**
